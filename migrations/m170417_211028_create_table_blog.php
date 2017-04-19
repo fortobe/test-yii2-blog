@@ -17,7 +17,7 @@ class m170417_211028_create_table_blog extends Migration
   INDEX `fk_blg_blog_1_idx` (`user_id` ASC),
   CONSTRAINT `fk_blg_blog_1`
     FOREIGN KEY (`user_id`)
-    REFERENCES `mydb`.`blg_user` (`id`)
+    REFERENCES `blg_user` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB DEFAULT CHARSET UTF8;

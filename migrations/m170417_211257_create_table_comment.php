@@ -18,12 +18,12 @@ class m170417_211257_create_table_comment extends Migration
   INDEX `fk_blg_comment_2_idx` (`user_id` ASC),
   CONSTRAINT `fk_blg_comment_1`
     FOREIGN KEY (`blog_id`)
-    REFERENCES `mydb`.`blg_blog` (`id`)
+    REFERENCES `blg_blog` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_blg_comment_2`
     FOREIGN KEY (`user_id`)
-    REFERENCES `mydb`.`blg_user` (`id`)
+    REFERENCES `blg_user` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB DEFAULT CHARSET UTF8;
