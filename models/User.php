@@ -2,38 +2,115 @@
 
 namespace app\models;
 
-class User extends \yii\base\Object implements \yii\web\IdentityInterface
+use Yii;
+use yii\db\ActiveRecord;
+use yii\web\IdentityInterface;
+
+/**
+ * User Model
+ *
+ * @property integer $id
+ * @property string $username
+ * @property string $surname
+ * @property string $name
+ * @property string $password write-only password
+ * @property string $salt
+ * @property string $access_token
+ * @property string $create_date
+ *
+ */
+class User extends ActiveRecord implements IdentityInterface
 {
-    public $id;
-    public $username;
-    public $password;
-    public $authKey;
-    public $accessToken;
+    /**
+     * @inheritdoc
+     */
+    public static function tableName()
+    {
+        return 'blg_user';
+    }
 
-    private static $users = [
-        '100' => [
-            'id' => '100',
-            'username' => 'admin',
-            'password' => 'admin',
-            'authKey' => 'test100key',
-            'accessToken' => '100-token',
-        ],
-        '101' => [
-            'id' => '101',
-            'username' => 'demo',
-            'password' => 'demo',
-            'authKey' => 'test101key',
-            'accessToken' => '101-token',
-        ],
-    ];
+    /**
+     * @inheritdoc
+     */
+    public function rules()
+    {
+        return [
+            [['username', 'name', 'surname', 'password'], 'required'],
+            ['username', 'email'],
+            ['username', 'unique'],
+            ];
+    }
 
+    /**
+     * @inheritdoc
+     */
+    public function attributeLabels()
+    {
+        return [
+            'id' => _('ID'),
+            'name' => _('ИМЯ'),
+            'surname' => _('ФАМИЛИЯ'),
+            'password' => _('Пароль'),
+            'salt' => _('Соль'),
+            'access_token' => _('Ключ авторизации'),
+        ];
+    }
+
+    /**
+     * Before save event handler
+     * @param bool $insert
+     * @return bool
+     */
+    public function beforeSave($insert)
+    {
+         if (parent::beforeSave($insert))
+         {
+             if ($this->getIsNewRecord() && !empty($this->password))
+             {
+                 $this->salt = $this->saltGenerator();
+             }
+             if (!empty($this->password))
+             {
+                 $this->password = $this->passWithSalt($this->password, $this->salt);
+             }
+             else
+             {
+                 unset($this->password);
+             }
+             return true;
+         }
+         else
+         {
+             return false;
+         }
+    }
+
+    /**
+     * Generate the salt
+     * @return string
+     */
+    public function saltGenerator()
+    {
+        return hash("sha512", uniqid('salt_', true));
+    }
+
+    /**
+     * Return pass with the salt
+     * @param $password
+     * @param $salt
+     * @return string
+     */
+    public function passWithSalt($password, $salt)
+    {
+        return hash("sha512", $password . $salt);
+    }
 
     /**
      * @inheritdoc
      */
     public static function findIdentity($id)
     {
-        return isset(self::$users[$id]) ? new static(self::$users[$id]) : null;
+        return static::findOne(['id' => $id]);
     }
 
     /**
@@ -41,30 +118,18 @@ class User extends \yii\base\Object implements \yii\web\IdentityInterface
      */
     public static function findIdentityByAccessToken($token, $type = null)
     {
-        foreach (self::$users as $user) {
-            if ($user['accessToken'] === $token) {
-                return new static($user);
-            }
-        }
-
-        return null;
+        return static::findOne(['access_token' => $token]);
     }
 
     /**
-     * Finds user by username
+     * Finds users by username
      *
      * @param string $username
      * @return static|null
      */
     public static function findByUsername($username)
     {
-        foreach (self::$users as $user) {
-            if (strcasecmp($user['username'], $username) === 0) {
-                return new static($user);
-            }
-        }
-
-        return null;
+        return static::findOne(['username' => $username]);
     }
 
     /**
@@ -72,7 +137,7 @@ class User extends \yii\base\Object implements \yii\web\IdentityInterface
      */
     public function getId()
     {
-        return $this->id;
+        return $this->getPrimaryKey(true)["id"];
     }
 
     /**
@@ -80,7 +145,7 @@ class User extends \yii\base\Object implements \yii\web\IdentityInterface
      */
     public function getAuthKey()
     {
-        return $this->authKey;
+        return $this->access_token;
     }
 
     /**
@@ -88,17 +153,35 @@ class User extends \yii\base\Object implements \yii\web\IdentityInterface
      */
     public function validateAuthKey($authKey)
     {
-        return $this->authKey === $authKey;
+        return $this->getAuthKey() === $authKey;
     }
 
     /**
      * Validates password
      *
      * @param string $password password to validate
-     * @return bool if password provided is valid for current user
+     * @return boolean if password provided is valid for current user
      */
     public function validatePassword($password)
     {
-        return $this->password === $password;
+        return $this->password === $this->passWithSalt($password, $this->salt);
+    }
+
+    /**
+     * Generates password hash from password and sets it to the model
+     *
+     * @param string $password
+     */
+    public function setPassword($password)
+    {
+        $this->password = $this->passWithSalt($password, $this->saltGenerator());
+    }
+
+    /**
+     * Generate "remember me@ authentication key
+     */
+    public function generateAuthKey()
+    {
+        $this->access_token = Yii::$app->security->generateRandomString();
     }
 }
