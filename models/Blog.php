@@ -54,11 +54,26 @@ class Blog extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'user_id' => 'Пользователь',
+            'user_name' => 'Пользователь',
             'description' => 'Описание',
             'article' => 'Статья',
             'create_date' => 'Дата создания',
         ];
+    }
+
+    /**
+     * Before save event handler
+     * @param bool $insert
+     * @return bool
+     */
+    public function beforeSave($insert)
+    {
+        if (parent::beforeSave($insert))
+        {
+            $this->user_id = Yii::$app->user->id;
+            return true;
+        }
+        return false;
     }
 
     /**
