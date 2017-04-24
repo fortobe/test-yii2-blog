@@ -12,31 +12,52 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="blog-view">
 
-    <h1><?= Html::encode($this->title) ?></h1>
-
-    <p>
-        <?= Html::a('Обновить', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-        <?= Html::a('Удалить', ['delete', 'id' => $model->id], [
-            'class' => 'btn btn-danger',
-            'data' => [
-                'confirm' => 'Вы уверены, что хотите удалить?',
-                'method' => 'post',
-            ],
+    <?php
+    if ($model->user_id == Yii::$app->user->id)
+    {
+        ?>
+        <p>
+            <?= Html::a('Изменить', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
+        </p>
+        <?php
+    }
+    ?>
+    <hr>
+    <h1><?=$model->description?></h1>
+    <div style="">
+        <img src="/<?=$model->image?>" style="">
+        <span><?=$model->article?></span>
+    </div>
+    <div style="">
+        <b>Автор: </b> <?=$model->user->surname . ' ' . $model->user->name?>
+    </div>
+    <hr>
+    <div>
+        <?= $this->render('../comment/_form', [
+            'model' => $comment,
         ]) ?>
-    </p>
-
-    <?= DetailView::widget([
-        'model' => $model,
-        'attributes' => [
-            'id',
-            [
-                'attribute'=>'user_name',
-                'value' => $model->user->name . " " . $model->user->surname
-            ],
-            'description',
-            'article:ntext',
-            'create_date',
-        ],
-    ]) ?>
-
+    </div>
+    <div>
+        <?php
+        foreach ($model->comments as $key => $val)
+        {
+            ?>
+                <div style="border: 1px dotted #3498db;padding:  20px 20px 40px; margin-bottom: 20px;">
+                    <p>
+                        <b>Комментарий: </b>
+                        <?=$val->comment?>
+                    </p>
+                    <div style="float: left;">
+                        <b>Пользователь: </b>
+                        <?=$val->user->surname . " " . $val->user->name?>
+                    </div>
+                    <div style="float: right;">
+                        <b>Дата создания: </b>
+                        <?=$val->create_date?>
+                    </div>
+                </div>
+            <?php
+        }
+        ?>
+    </div>
 </div>

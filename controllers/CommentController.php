@@ -5,6 +5,7 @@ namespace app\controllers;
 use Yii;
 use app\models\Comment;
 use app\models\CommentSearch;
+use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -20,6 +21,17 @@ class CommentController extends Controller
     public function behaviors()
     {
         return [
+            'access' => [
+                'class' => AccessControl::className(),
+                'only' => ['logout'],
+                'rules' => [
+                    [
+                        'actions' => ['create', 'update', 'delete'],
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
             'verbs' => [
                 'class' => VerbFilter::className(),
                 'actions' => [
@@ -62,13 +74,11 @@ class CommentController extends Controller
      * @param $id blog id
      * @return string|\yii\web\Response
      */
-    public function actionCreate($id)
+    public function actionCreate()
     {
         $model = new Comment();
-        if (!empty(Yii::$app->request->post()))
-            $model->blog_id = $id;
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+            return $this->redirect(['/blog/view', 'id' => $model->blog_id]);
         } else {
             return $this->render('create', [
                 'model' => $model,

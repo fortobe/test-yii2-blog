@@ -5,6 +5,7 @@ namespace app\controllers;
 use Yii;
 use app\models\Blog;
 use app\models\BlogSearch;
+use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -20,6 +21,17 @@ class BlogController extends Controller
     public function behaviors()
     {
         return [
+            'access' => [
+                'class' => AccessControl::className(),
+                'only' => ['logout'],
+                'rules' => [
+                    [
+                        'actions' => ['create', 'update', 'delete'],
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
             'verbs' => [
                 'class' => VerbFilter::className(),
                 'actions' => [
@@ -51,8 +63,12 @@ class BlogController extends Controller
      */
     public function actionView($id)
     {
+
+        $comment = new \app\models\Comment();
+        $comment->blog_id = $id;
         return $this->render('view', [
             'model' => $this->findModel($id),
+            'comment' => $comment
         ]);
     }
 

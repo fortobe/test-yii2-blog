@@ -14,6 +14,8 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'description')->textInput(['maxlength' => true]) ?>
 
+    <?= $form->field($model, 'imageFile')->fileInput() ?>
+
     <?= $form->field($model, 'article')->textarea(['rows' => 6]) ?>
 
     <div class="form-group">
